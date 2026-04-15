@@ -35,6 +35,14 @@ COMMON_YDL_OPTS = {
     }
 }
 
+# 로컬 환경(Windows)에서 실행 시 브라우저 쿠키를 사용하여 봇 감지 우회
+import os
+if not os.environ.get('VERCEL'):
+    try:
+        COMMON_YDL_OPTS['cookies_from_browser'] = 'chrome'
+    except:
+        pass
+
 @app.get("/info")
 async def get_info(url: str):
     if not url:
