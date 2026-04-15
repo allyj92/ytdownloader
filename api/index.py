@@ -12,12 +12,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In Vercel, the base path might be /api
-@app.get("/api")
-async def root():
-    return {"message": "API is running"}
-
-@app.get("/api/info")
+# Vercel이 /api 경로를 이 파일로 라우팅하므로, 여기서는 그 하위 경로만 정의합니다.
+@app.get("/info")
 async def get_info(url: str):
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
@@ -36,7 +32,7 @@ async def get_info(url: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/download")
+@app.get("/download")
 async def download(url: str):
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
@@ -48,6 +44,7 @@ async def download(url: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# Health check용
+@app.get("/")
+async def root():
+    return {"status": "ok"}
