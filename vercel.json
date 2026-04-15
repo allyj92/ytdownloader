@@ -1,9 +1,18 @@
 {
-  "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/:path*",
       "destination": "/api/index.py"
     }
-  ]
+  ],
+  "experimentalServices": {
+    "frontend": {
+      "routePrefix": "/",
+      "framework": "nextjs"
+    },
+    "backend": {
+      "entrypoint": "api",
+      "routePrefix": "/api"
+    }
+  }
 }
