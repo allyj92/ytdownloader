@@ -1,18 +1,14 @@
 {
+  "version": 2,
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/api/(.*)",
       "destination": "/api/index.py"
     }
   ],
-  "experimentalServices": {
-    "frontend": {
-      "routePrefix": "/",
-      "framework": "nextjs"
-    },
-    "backend": {
-      "entrypoint": "api",
-      "routePrefix": "/api"
+  "functions": {
+    "api/index.py": {
+      "runtime": "vercel-python@0.8.0"
     }
   }
 }

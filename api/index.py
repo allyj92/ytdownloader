@@ -14,13 +14,11 @@ app.add_middleware(
 )
 
 def get_ydl_opts():
-    # 봇 감지 우회를 위한 최신 추출기 옵션
     opts = {
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
         'no_color': True,
-        # 유튜브의 최신 보안 정책을 우회하기 위한 클라이언트 설정
         'extractor_args': {
             'youtube': {
                 'player_client': ['ios', 'android', 'web'],
@@ -35,24 +33,21 @@ def get_ydl_opts():
             'Referer': 'https://www.youtube.com/',
         }
     }
-
-    # 로컬 환경(Windows 등)에서 실행 시 본인 브라우저 쿠키 자동 로드
     if not os.environ.get('VERCEL'):
         try:
-            # 크롬 브라우저의 로그인 정보를 활용하여 100% 우회 시도
             opts['cookies_from_browser'] = 'chrome'
         except:
             pass
-            
     return opts
 
+# /api/info와 /info 둘 다 대응
 @app.get("/api/info")
+@app.get("/info")
 async def get_info(url: str):
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
     try:
         with yt_dlp.YoutubeDL(get_ydl_opts()) as ydl:
-            # extract_info 호출 시 download=False로 메타데이터만 추출
             info = ydl.extract_info(url, download=False)
             return {
                 "title": info.get('title'),
@@ -63,21 +58,22 @@ async def get_info(url: str):
                 "url": url
             }
     except Exception as e:
-        # 에러 발생 시 상세 메시지 반환
         raise HTTPException(status_code=500, detail=str(e))
 
+# /api/download와 /download 둘 다 대응
 @app.get("/api/download")
+@app.get("/download")
 async def download(url: str):
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
     try:
         with yt_dlp.YoutubeDL(get_ydl_opts()) as ydl:
             info = ydl.extract_info(url, download=False)
-            # 스트리밍 가능한 직접 URL 반환
             return {"download_url": info.get('url'), "title": info.get('title')}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api")
+@app.get("/")
 async def root():
-    return {"status": "ok", "message": "YouTube Downloader API is ready"}
+    return {"status": "ok", "message": "API is running"}
