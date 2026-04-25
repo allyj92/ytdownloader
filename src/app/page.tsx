@@ -55,20 +55,25 @@ export default function Home() {
     setDownloading(true);
     try {
       const res = await fetch(`/api/download?id=${videoInfo.id}`);
+      const data = await res.json();
+
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Download failed');
+        throw new Error(data.error || 'Download extraction failed');
       }
       
-      const blob = await res.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
+      // 브라우저가 직접 URL에서 다운로드하도록 유도
       const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `${videoInfo.title}.mp4`;
+      a.href = data.downloadUrl;
+      a.download = `${data.title || 'video'}.mp4`;
+      // 새 창에서 열기 (차단 방지)
+      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+
+      // 알림 메시지 (직접 다운로드가 안될 경우 대비)
+      alert('다운로드가 시작되지 않으면 열린 새 창에서 "다른 이름으로 저장"을 눌러주세요.');
+      
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -90,7 +95,7 @@ export default function Home() {
             YouTube Downloader
           </h1>
           <p className="text-lg text-slate-600 max-w-xl mx-auto">
-            Download your favorite YouTube videos in MP4 format instantly.
+            Directly from YouTube servers for maximum success.
           </p>
         </div>
 
@@ -114,9 +119,7 @@ export default function Home() {
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <>
-                  <span>Analyze</span>
-                </>
+                <span>Analyze</span>
               )}
             </button>
           </form>
@@ -150,9 +153,6 @@ export default function Home() {
                     {videoInfo.title}
                   </h2>
                   <p className="text-sm text-slate-500 mb-4">{videoInfo.author}</p>
-                  <div className="inline-block px-3 py-1 bg-slate-100 rounded-full text-xs font-semibold text-slate-600">
-                    MP4 • Best Quality
-                  </div>
                 </div>
                 
                 <button
@@ -163,7 +163,7 @@ export default function Home() {
                   {downloading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Downloading...</span>
+                      <span>Extracting Link...</span>
                     </>
                   ) : (
                     <>
@@ -176,11 +176,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        {/* Footer info */}
-        <div className="mt-12 text-center text-slate-400 text-sm italic">
-          Please respect the rights of content creators. Use this tool for personal use only.
-        </div>
       </div>
     </main>
   );
