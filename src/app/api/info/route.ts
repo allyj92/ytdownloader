@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
     const yt = await Innertube.create({
       generate_session_locally: true,
-      client_type: 'TVHTML5_SIMPLY' as any
+      client_type: 'ANDROID_VR' as any
     });
     
     let videoId = '';
@@ -32,13 +32,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 });
     }
 
-    const info = await yt.getInfo(videoId);
-
-    if (info.playability_status?.status !== 'OK') {
-      return NextResponse.json({ 
-        error: `Video unavailable: ${info.playability_status?.reason || 'Unknown reason'}` 
-      }, { status: 403 });
-    }
+    // getBasicInfo는 무거운 파싱 과정을 생략하므로 에러 확률이 낮습니다.
+    const info = await yt.getBasicInfo(videoId);
 
     const basicInfo = {
       id: info.basic_info.id,
@@ -51,6 +46,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(basicInfo);
   } catch (error: any) {
     console.error('Error fetching info:', error);
-    return NextResponse.json({ error: error.message || 'Failed to fetch video info' }, { status: 500 });
+    return NextResponse.json({ error: `Analysis Failed: ${error.message}` }, { status: 500 });
   }
 }
