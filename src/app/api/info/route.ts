@@ -1,5 +1,7 @@
-import { Innertube } from 'youtubei.js';
+import { Innertube, UniversalCache } from 'youtubei.js';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,8 +12,7 @@ export async function POST(req: NextRequest) {
 
     const yt = await Innertube.create({
       generate_session_locally: true,
-      retrieve_player: true,
-      client_type: 'IOS' as any
+      cache: new UniversalCache(false)
     });
     
     let videoId = '';

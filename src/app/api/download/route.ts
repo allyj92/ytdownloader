@@ -1,6 +1,8 @@
 import { Innertube, UniversalCache } from 'youtubei.js';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const videoId = searchParams.get('id');
@@ -10,19 +12,19 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 가장 우회 성능이 좋은 iOS 클라이언트로 설정
+    // 기본 클라이언트로 복귀하되 세션 로컬 생성 활성화
     const yt = await Innertube.create({
       generate_session_locally: true,
-      retrieve_player: true,
-      client_type: 'IOS' as any
+      cache: new UniversalCache(false)
     });
 
-    // 상세 파싱 과정에서 발생하는 null 에러를 방지하기 위해 getBasicInfo 사용
+    // getBasicInfo로 라이브러리 내부 파싱 버그(null as) 우회
     const info = await yt.getBasicInfo(videoId);
     
     if (!info.streaming_data) {
-      // 만약 데이터센터 IP가 완전히 차단된 경우 여기에 도달합니다.
-      throw new Error('YouTube blocked this server IP. Please try again later or run locally.');
+      return NextResponse.json({ 
+        error: 'YouTube blocked this server. This often happens on cloud platforms like Vercel.' 
+      }, { status: 403 });
     }
 
     const formats = [
@@ -30,14 +32,14 @@ export async function GET(req: NextRequest) {
       ...(info.streaming_data.adaptive_formats || [])
     ];
 
-    // 비디오+오디오 통합 포맷 중 가장 좋은 것 선택
+    // 비디오+오디오 통합 포맷 중 가장 해상도가 높은 것 선택
     const bestFormat = formats
       .filter(f => f.has_video && f.has_audio)
       .sort((a, b) => (b.width || 0) - (a.width || 0))[0];
 
     if (!bestFormat || !bestFormat.url) {
       return NextResponse.json({ 
-        error: 'This video requires a signature bypass that is currently blocked on this server.' 
+        error: 'No direct download link available. The video might be restricted.' 
       }, { status: 403 });
     }
 
@@ -49,7 +51,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Extraction error:', error);
     return NextResponse.json({ 
-      error: `YouTube Block: ${error.message}` 
+      error: `Server Side Error: ${error.message}. Try running the project locally for 100% success.` 
     }, { status: 500 });
   }
 }
