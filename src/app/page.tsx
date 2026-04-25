@@ -14,6 +14,7 @@ interface VideoInfo {
 export default function Home() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
 
@@ -24,6 +25,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setVideoInfo(null);
+    setDownloading(false);
 
     try {
       const res = await fetch('/api/info', {
@@ -50,18 +52,27 @@ export default function Home() {
     if (!videoInfo) return;
     
     setError(null);
+    setDownloading(true);
     try {
-      // Check if the response is okay before redirecting or handling as blob
       const res = await fetch(`/api/download?id=${videoInfo.id}`);
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || 'Download failed');
       }
       
-      // If okay, we can trigger the download by redirecting (though fetch already checked it)
-      window.location.href = `/api/download?id=${videoInfo.id}`;
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `${videoInfo.title}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -146,10 +157,20 @@ export default function Home() {
                 
                 <button
                   onClick={handleDownload}
-                  className="mt-6 w-full py-4 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-300"
+                  disabled={downloading}
+                  className="mt-6 w-full py-4 bg-slate-900 hover:bg-black disabled:bg-slate-400 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-300"
                 >
-                  <Download className="w-5 h-5" />
-                  <span>Download Now</span>
+                  {downloading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Downloading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5" />
+                      <span>Download Now</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

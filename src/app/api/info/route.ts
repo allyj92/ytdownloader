@@ -10,8 +10,7 @@ export async function POST(req: NextRequest) {
 
     const yt = await Innertube.create({
       generate_session_locally: true,
-      retrieve_player: true,
-      client_type: 'ANDROID' as any
+      client_type: 'TVHTML5_SIMPLY' as any
     });
     
     let videoId = '';
