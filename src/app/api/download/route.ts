@@ -12,19 +12,21 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 기본 클라이언트로 복귀하되 세션 로컬 생성 활성화
+    // 모바일 웹(MWEB) 클라이언트로 위장하여 차단 우회 시도
     const yt = await Innertube.create({
       generate_session_locally: true,
-      cache: new UniversalCache(false)
+      client_type: 'MWEB' as any,
+      fetchOptions: {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1'
+        }
+      }
     });
 
-    // getBasicInfo로 라이브러리 내부 파싱 버그(null as) 우회
     const info = await yt.getBasicInfo(videoId);
     
     if (!info.streaming_data) {
-      return NextResponse.json({ 
-        error: 'YouTube blocked this server. This often happens on cloud platforms like Vercel.' 
-      }, { status: 403 });
+      throw new Error('Streaming data is hidden by YouTube (IP Blocked)');
     }
 
     const formats = [
@@ -39,7 +41,7 @@ export async function GET(req: NextRequest) {
 
     if (!bestFormat || !bestFormat.url) {
       return NextResponse.json({ 
-        error: 'No direct download link available. The video might be restricted.' 
+        error: 'YouTube is protecting this video from server-side extraction.' 
       }, { status: 403 });
     }
 
@@ -51,7 +53,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Extraction error:', error);
     return NextResponse.json({ 
-      error: `Server Side Error: ${error.message}. Try running the project locally for 100% success.` 
+      error: `YouTube Blocked: ${error.message}. Vercel IPs are often restricted. Try a different video or run locally.` 
     }, { status: 500 });
   }
 }

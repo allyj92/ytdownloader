@@ -12,7 +12,12 @@ export async function POST(req: NextRequest) {
 
     const yt = await Innertube.create({
       generate_session_locally: true,
-      cache: new UniversalCache(false)
+      client_type: 'MWEB' as any,
+      fetchOptions: {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1'
+        }
+      }
     });
     
     let videoId = '';
@@ -47,6 +52,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(basicInfo);
   } catch (error: any) {
     console.error('Error fetching info:', error);
-    return NextResponse.json({ error: `Analysis Failed: ${error.message}` }, { status: 500 });
+    return NextResponse.json({ error: `Analysis Blocked: ${error.message}` }, { status: 500 });
   }
 }
