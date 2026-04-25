@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
 
     const yt = await Innertube.create({
       generate_session_locally: true,
-      client_type: 'ANDROID_VR' as any
+      retrieve_player: true,
+      client_type: 'IOS' as any
     });
     
     let videoId = '';
@@ -32,7 +33,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 });
     }
 
-    // getBasicInfo는 무거운 파싱 과정을 생략하므로 에러 확률이 낮습니다.
     const info = await yt.getBasicInfo(videoId);
 
     const basicInfo = {

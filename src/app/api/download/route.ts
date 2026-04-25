@@ -10,35 +10,35 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 최소한의 설정으로 세션 생성
+    // 가장 우회 성능이 좋은 iOS 클라이언트로 설정
     const yt = await Innertube.create({
       generate_session_locally: true,
-      client_type: 'ANDROID_VR' as any // 차단이 적은 클라이언트 시도
+      retrieve_player: true,
+      client_type: 'IOS' as any
     });
 
-    // getInfo 대신 getBasicInfo를 사용하여 내부 파서 에러(as of null) 우회 시도
+    // 상세 파싱 과정에서 발생하는 null 에러를 방지하기 위해 getBasicInfo 사용
     const info = await yt.getBasicInfo(videoId);
     
-    // 스트리밍 데이터 직접 확인
     if (!info.streaming_data) {
-      throw new Error('Streaming data is missing. YouTube might be blocking this request.');
+      // 만약 데이터센터 IP가 완전히 차단된 경우 여기에 도달합니다.
+      throw new Error('YouTube blocked this server IP. Please try again later or run locally.');
     }
 
-    // 포맷 수동 추출 (비디오+오디오 통합 포맷 중 가장 해상도가 높은 것)
     const formats = [
       ...(info.streaming_data.formats || []),
       ...(info.streaming_data.adaptive_formats || [])
     ];
 
-    // 통합 포맷(video+audio) 우선 탐색
+    // 비디오+오디오 통합 포맷 중 가장 좋은 것 선택
     const bestFormat = formats
       .filter(f => f.has_video && f.has_audio)
       .sort((a, b) => (b.width || 0) - (a.width || 0))[0];
 
     if (!bestFormat || !bestFormat.url) {
       return NextResponse.json({ 
-        error: 'Could not find a direct download link for this video. It might be protected.' 
-      }, { status: 404 });
+        error: 'This video requires a signature bypass that is currently blocked on this server.' 
+      }, { status: 403 });
     }
 
     return NextResponse.json({ 
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Extraction error:', error);
     return NextResponse.json({ 
-      error: `YouTube Blocked or Library Error: ${error.message}` 
+      error: `YouTube Block: ${error.message}` 
     }, { status: 500 });
   }
 }
