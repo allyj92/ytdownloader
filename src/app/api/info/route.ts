@@ -8,7 +8,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    const yt = await Innertube.create();
+    const yt = await Innertube.create({
+      generate_session_locally: true,
+      retrieve_player: true,
+      client_type: 'ANDROID'
+    });
     
     let videoId = '';
     try {

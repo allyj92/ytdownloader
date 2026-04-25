@@ -10,9 +10,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const yt = await Innertube.create();
+    const yt = await Innertube.create({
+      generate_session_locally: true,
+      retrieve_player: true,
+      client_type: 'ANDROID'
+    });
     const info = await yt.getInfo(videoId);
     
+    // Check if video is playable
+    if (info.playability_status?.status !== 'OK') {
+      return new Response(`Video is not playable: ${info.playability_status?.reason || 'Unknown reason'}`, { status: 403 });
+    }
+
     // Attempt to get the best quality format that has both video and audio
     const format = info.chooseFormat({ type: 'video+audio', quality: 'best' });
     

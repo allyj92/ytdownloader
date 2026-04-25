@@ -46,9 +46,23 @@ export default function Home() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!videoInfo) return;
-    window.location.href = `/api/download?id=${videoInfo.id}`;
+    
+    setError(null);
+    try {
+      // Check if the response is okay before redirecting or handling as blob
+      const res = await fetch(`/api/download?id=${videoInfo.id}`);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Download failed');
+      }
+      
+      // If okay, we can trigger the download by redirecting (though fetch already checked it)
+      window.location.href = `/api/download?id=${videoInfo.id}`;
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   return (
