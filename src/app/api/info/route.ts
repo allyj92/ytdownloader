@@ -34,6 +34,13 @@ export async function POST(req: NextRequest) {
     }
 
     const info = await yt.getInfo(videoId);
+
+    if (info.playability_status?.status !== 'OK') {
+      return NextResponse.json({ 
+        error: `Video unavailable: ${info.playability_status?.reason || 'Unknown reason'}` 
+      }, { status: 403 });
+    }
+
     const basicInfo = {
       id: info.basic_info.id,
       title: info.basic_info.title,

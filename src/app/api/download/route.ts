@@ -33,15 +33,17 @@ export async function GET(req: NextRequest) {
       itag: format.itag
     });
     
-    // We need to return a Response with the stream.
-    // In Node.js environment, we might need to convert the stream if it's not a Web Stream.
-    // Innertube's download returns a stream that should be compatible with Response.
-    
-    const responseHeaders = new Headers();
-    responseHeaders.set('Content-Type', 'video/mp4');
-    responseHeaders.set('Content-Disposition', `attachment; filename="${encodeURIComponent(info.basic_info.title || 'video')}.mp4"`);
+    if (!stream) {
+      return new Response('Failed to generate download stream', { status: 500 });
+    }
 
-    return new Response(stream as any, {
+    const responseHeaders = new Headers();
+    const fileName = info.basic_info.title ? encodeURIComponent(info.basic_info.title) : 'video';
+    responseHeaders.set('Content-Type', 'video/mp4');
+    responseHeaders.set('Content-Disposition', `attachment; filename="${fileName}.mp4"`);
+
+    // Ensure the stream is treated correctly as a body
+    return new Response(stream as ReadableStream, {
       headers: responseHeaders,
     });
   } catch (error: any) {
