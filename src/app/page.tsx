@@ -14,7 +14,6 @@ interface VideoInfo {
 export default function Home() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
 
@@ -25,7 +24,6 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setVideoInfo(null);
-    setDownloading(false);
 
     try {
       const res = await fetch('/api/info', {
@@ -48,43 +46,9 @@ export default function Home() {
     }
   };
 
-  const handleDownload = async () => {
-    if (!videoInfo) return;
-    
-    setError(null);
-    setDownloading(true);
-    try {
-      const res = await fetch(`/api/download?id=${videoInfo.id}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Download extraction failed');
-      }
-      
-      // 브라우저가 직접 URL에서 다운로드하도록 유도
-      const a = document.createElement('a');
-      a.href = data.downloadUrl;
-      a.download = `${data.title || 'video'}.mp4`;
-      // 새 창에서 열기 (차단 방지)
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      // 알림 메시지 (직접 다운로드가 안될 경우 대비)
-      alert('다운로드가 시작되지 않으면 열린 새 창에서 "다른 이름으로 저장"을 눌러주세요.');
-      
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setDownloading(false);
-    }
-  };
-
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
             <div className="bg-red-600 p-3 rounded-2xl shadow-lg shadow-red-200">
@@ -95,11 +59,10 @@ export default function Home() {
             YouTube Downloader
           </h1>
           <p className="text-lg text-slate-600 max-w-xl mx-auto">
-            Directly from YouTube servers for maximum success.
+            High-speed MP4 downloads through secure proxy.
           </p>
         </div>
 
-        {/* Search Input */}
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200 p-6 mb-8 border border-slate-100">
           <form onSubmit={fetchInfo} className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-grow">
@@ -116,11 +79,7 @@ export default function Home() {
               disabled={loading || !url}
               className="px-8 py-4 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-200"
             >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <span>Analyze</span>
-              )}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Analyze</span>}
             </button>
           </form>
 
@@ -132,16 +91,11 @@ export default function Home() {
           )}
         </div>
 
-        {/* Video Preview */}
         {videoInfo && (
-          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200 overflow-hidden border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200 overflow-hidden border border-slate-100">
             <div className="md:flex">
               <div className="md:w-1/2">
-                <img
-                  src={videoInfo.thumbnail}
-                  alt={videoInfo.title}
-                  className="w-full h-full object-cover aspect-video"
-                />
+                <img src={videoInfo.thumbnail} alt={videoInfo.title} className="w-full h-full object-cover aspect-video" />
               </div>
               <div className="p-8 md:w-1/2 flex flex-col justify-between">
                 <div>
@@ -149,29 +103,17 @@ export default function Home() {
                     <CheckCircle2 className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Ready to download</span>
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900 mb-2 line-clamp-2">
-                    {videoInfo.title}
-                  </h2>
+                  <h2 className="text-xl font-bold text-slate-900 mb-2 line-clamp-2">{videoInfo.title}</h2>
                   <p className="text-sm text-slate-500 mb-4">{videoInfo.author}</p>
                 </div>
                 
-                <button
-                  onClick={handleDownload}
-                  disabled={downloading}
-                  className="mt-6 w-full py-4 bg-slate-900 hover:bg-black disabled:bg-slate-400 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-300"
+                <a
+                  href={`/api/download?id=${videoInfo.id}`}
+                  className="mt-6 w-full py-4 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-300"
                 >
-                  {downloading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Extracting Link...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-5 h-5" />
-                      <span>Download Now</span>
-                    </>
-                  )}
-                </button>
+                  <Download className="w-5 h-5" />
+                  <span>Download MP4</span>
+                </a>
               </div>
             </div>
           </div>

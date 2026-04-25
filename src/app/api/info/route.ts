@@ -1,7 +1,5 @@
-import { Innertube, UniversalCache } from 'youtubei.js';
+import { Innertube } from 'youtubei.js';
 import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +10,7 @@ export async function POST(req: NextRequest) {
 
     const yt = await Innertube.create({
       generate_session_locally: true,
-      client_type: 'MWEB' as any
+      client_type: 'ANDROID' as any
     });
     
     let videoId = '';
@@ -47,6 +45,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(basicInfo);
   } catch (error: any) {
     console.error('Error fetching info:', error);
-    return NextResponse.json({ error: `Analysis Blocked: ${error.message}` }, { status: 500 });
+    return NextResponse.json({ error: `Analysis Error: ${error.message}` }, { status: 500 });
   }
 }
