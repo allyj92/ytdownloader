@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, Youtube, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Download, Video, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface VideoInfo {
   id: string;
@@ -58,7 +58,7 @@ export default function Home() {
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
             <div className="bg-red-600 p-3 rounded-2xl shadow-lg shadow-red-200">
-              <Youtube className="w-8 h-8 text-white" />
+              <Video className="w-8 h-8 text-white" />
             </div>
           </div>
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight sm:text-5xl mb-4">

@@ -20,7 +20,9 @@ export async function GET(req: NextRequest) {
       return new Response('No suitable format found', { status: 404 });
     }
 
-    const stream = await info.download(format.itag);
+    const stream = await info.download({
+      itag: format.itag
+    });
     
     // We need to return a Response with the stream.
     // In Node.js environment, we might need to convert the stream if it's not a Web Stream.
